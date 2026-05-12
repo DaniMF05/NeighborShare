@@ -28,14 +28,24 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // 3. Insertar en la base de datos
-        await pool.request()
+        // 3. Insertar el nuevo usuario y OBTENER sus datos de vuelta usando OUTPUT
+        const result = await pool.request()
             .input('nombre', sql.VarChar, nombre)
             .input('email', sql.VarChar, email)
-            .input('password', sql.VarChar, passwordHash)
-            .query('INSERT INTO Usuarios (nombre, email, password_hash) VALUES (@nombre, @email, @password)');
+            .input('password_hash', sql.VarChar, salt) // asumiendo que tu variable se llama salt o hash
+            .query(`
+                INSERT INTO Usuarios (nombre, email, password_hash)
+                OUTPUT Inserted.id_usuario, Inserted.nombre, Inserted.email
+                VALUES (@nombre, @email, @password_hash)
+            `);
 
-        res.status(201).json({ msg: 'Usuario registrado exitosamente' });
+        const newUser = result.recordset[0]; // Capturamos el usuario recién creado
+
+        // CAMBIO AQUÍ: Enviamos el usuario de vuelta al frontend
+        res.status(201).json({ 
+            msg: 'Usuario registrado exitosamente',
+            user: newUser
+        });
 
     } catch (err) {
         console.error(err);
@@ -82,10 +92,18 @@ router.post('/login', async (req, res) => {
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '8h' }, // El token dura 8 horas
+            { expiresIn: '8h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                // CAMBIO AQUÍ: Ahora devolvemos el token Y los datos del usuario
+                res.json({ 
+                    token,
+                    user: {
+                        id_usuario: user.id_usuario,
+                        nombre: user.nombre,
+                        email: user.email
+                    }
+                });
             }
         );
 
