@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { poolPromise, sql } = require('../db');
 
 // Ruta: POST /api/auth/register
@@ -9,7 +10,7 @@ router.post('/register', async (req, res) => {
 
     // Validación simple de campos obligatorios
     if (!nombre || !email || !password) {
-        return res.status(400).json({ msg: 'Por favor, ingrese todos los campos' });
+        return res.status(400).json({ error: 'Por favor, ingrese todos los campos' });
     }
 
     try {
@@ -21,47 +22,51 @@ router.post('/register', async (req, res) => {
             .query('SELECT * FROM Usuarios WHERE email = @email');
 
         if (userCheck.recordset.length > 0) {
-            return res.status(400).json({ msg: 'El usuario ya existe' });
+            return res.status(400).json({ error: 'El usuario ya existe' });
         }
 
         // 2. Encriptar la contraseña
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // 3. Insertar el nuevo usuario y OBTENER sus datos de vuelta usando OUTPUT
+        // 3. Insertar en la base de datos
         const result = await pool.request()
             .input('nombre', sql.VarChar, nombre)
             .input('email', sql.VarChar, email)
-            .input('password_hash', sql.VarChar, salt) // asumiendo que tu variable se llama salt o hash
-            .query(`
-                INSERT INTO Usuarios (nombre, email, password_hash)
-                OUTPUT Inserted.id_usuario, Inserted.nombre, Inserted.email
-                VALUES (@nombre, @email, @password_hash)
-            `);
+            .input('password', sql.VarChar, passwordHash)
+            .query('INSERT INTO Usuarios (nombre, email, password_hash) VALUES (@nombre, @email, @password); SELECT SCOPE_IDENTITY() AS id_usuario');
 
-        const newUser = result.recordset[0]; // Capturamos el usuario recién creado
+        const userId = result.recordset[0].id_usuario;
 
-        // CAMBIO AQUÍ: Enviamos el usuario de vuelta al frontend
-        res.status(201).json({ 
-            msg: 'Usuario registrado exitosamente',
-            user: newUser
+        // 4. Crear el Token JWT
+        const payload = {
+            user: { id: userId }
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+        // 5. Devolver token y datos del usuario
+        return res.status(201).json({
+            token,
+            user: {
+                id_usuario: userId,
+                nombre,
+                email
+            }
         });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error en el servidor');
+        console.error('Error en registro:', err);
+        res.status(500).json({ error: 'Error en el servidor' });
     }
 });
-
-
-const jwt = require('jsonwebtoken');
 
 // Ruta: POST /api/auth/login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ msg: 'Por favor, ingrese todos los campos' });
+        return res.status(400).json({ error: 'Por favor, ingrese todos los campos' });
     }
 
     try {
@@ -75,42 +80,36 @@ router.post('/login', async (req, res) => {
         const user = result.recordset[0];
 
         if (!user) {
-            return res.status(400).json({ msg: 'Credenciales inválidas (Usuario no encontrado)' });
+            return res.status(400).json({ error: 'Credenciales inválidas (Usuario no encontrado)' });
         }
 
         // 2. Comparar la contraseña enviada con la encriptada en la base
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            return res.status(400).json({ msg: 'Credenciales inválidas (Contraseña incorrecta)' });
+            return res.status(400).json({ error: 'Credenciales inválidas (Contraseña incorrecta)' });
         }
 
-        // 3. Crear el Token (JWT)
+        // 3. Crear el Token JWT
         const payload = {
             user: { id: user.id_usuario }
         };
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' },
-            (err, token) => {
-                if (err) throw err;
-                // CAMBIO AQUÍ: Ahora devolvemos el token Y los datos del usuario
-                res.json({ 
-                    token,
-                    user: {
-                        id_usuario: user.id_usuario,
-                        nombre: user.nombre,
-                        email: user.email
-                    }
-                });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+        // 4. Devolver token y datos del usuario
+        return res.json({
+            token,
+            user: {
+                id_usuario: user.id_usuario,
+                nombre: user.nombre,
+                email: user.email
             }
-        );
+        });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error en el servidor');
+        console.error('Error en login:', err);
+        res.status(500).json({ error: 'Error en el servidor' });
     }
 });
-module.exports = router;
 
+module.exports = router;
