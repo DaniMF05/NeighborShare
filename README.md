@@ -18,6 +18,7 @@ Una app para que los vecinos se presten cosas entre sí.
 
 ## Cómo correrlo
 
+
 1. Clona el repo y entra al backend:
    ```bash
    git clone https://github.com/DaniMF05/NeighborShare.git
@@ -42,7 +43,7 @@ Una app para que los vecinos se presten cosas entre sí.
    node index.js
    ```
 
-5. Abre `frontend/NeighboreShare.html` en el navegador.
+5. Abre `frontend/NeighboreShare.html` en un navegador.
 
 ## Endpoints principales
 
