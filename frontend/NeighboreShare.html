@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Estilos.css">
+    <title>NeighborShare</title>
+</head>
+<body>
+    <main class="app">
+        <div class="shell">
+            <header class="topbar">
+                <div class="brand">
+                    <h1>NeighborShare</h1>
+                    <p>Registro, catálogo, publicaciones y solicitudes en una sola vista web.</p>
+                </div>
+                <div class="badge" id="sessionBadge">Sesión no iniciada</div>
+            </header>
+
+            <div class="content">
+                <section id="screenLogin" class="screen">
+                    <div class="panel">
+                        <h2>Acceso</h2>
+                        <p class="subtitle">Crea una cuenta o entra con un usuario existente.</p>
+
+                        <div style="display: flex; gap: 10px; margin-top: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 18px;">
+                            <button id="tabRegister" class="ghost" style="border-bottom: 2px solid var(--accent); border-radius: 0; padding: 10px 16px;">Registrarse</button>
+                            <button id="tabLogin" class="ghost" style="border-radius: 0; padding: 10px 16px;">Iniciar sesión</button>
+                        </div>
+
+                        <div id="formRegister" style="display: block;">
+                            <div style="margin-bottom: 18px;">
+                                <label for="regEmail">Correo</label>
+                                <input id="regEmail" type="email" autocomplete="email" placeholder="Tu correo">
+                            </div>
+                            <div style="margin-bottom: 18px;">
+                                <label for="regName">Nombre</label>
+                                <input id="regName" type="text" placeholder="Tu nombre">
+                            </div>
+                            <div style="margin-bottom: 18px;">
+                                <label for="regPwd">Contraseña</label>
+                                <input id="regPwd" type="password" autocomplete="new-password" placeholder="Tu contraseña">
+                            </div>
+                            <div class="actions">
+                                <button class="primary" id="btnRegister">Crear cuenta</button>
+                            </div>
+                            <p id="registerStatus" class="form-message" aria-live="polite"></p>
+                        </div>
+
+                        <div id="formLogin" style="display: none;">
+                            <div style="margin-bottom: 18px;">
+                                <label for="loginEmail">Correo</label>
+                                <input id="loginEmail" type="email" autocomplete="email" placeholder="Tu correo">
+                            </div>
+                            <div style="margin-bottom: 18px;">
+                                <label for="loginPwd">Contraseña</label>
+                                <input id="loginPwd" type="password" autocomplete="current-password" placeholder="Tu contraseña">
+                            </div>
+                            <div class="actions">
+                                <button class="primary" id="btnLogin">Iniciar sesión</button>
+                            </div>
+                            <p id="loginStatus" class="form-message" aria-live="polite"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="screenMenu" class="screen hidden">
+                    <div class="panel">
+                        <h2>Menú principal</h2>
+                        <p class="subtitle">Elige una acción para seguir trabajando con tu catálogo.</p>
+
+                        <div class="menu-grid" style="margin-top: 18px;">
+                            <div class="menu-card">
+                                <h3>Publicar objeto</h3>
+                                <p class="muted">Agrega nombre, descripción, estado e imagen.</p>
+                                <button class="primary" id="goPublish">Abrir formulario</button>
+                            </div>
+                            <div class="menu-card">
+                                <h3>Ver catálogo</h3>
+                                <p class="muted">Revisa los objetos publicados y solicita préstamo.</p>
+                                <button class="primary" id="goCatalog">Abrir catálogo</button>
+                            </div>
+                            <div class="menu-card">
+                                <h3>Cerrar sesión</h3>
+                                <p class="muted">Termina la sesión actual y vuelve al acceso.</p>
+                                <button class="danger" id="btnLogout">Cerrar sesión</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="screenPublish" class="screen hidden">
+                    <div class="panel">
+                        <h2>Publicar objeto</h2>
+                        <p class="subtitle">Este formulario replica la lógica del script de Python.</p>
+
+                        <div class="grid-two" style="margin-top: 18px;">
+                            <div>
+                                <label for="objName">Nombre</label>
+                                <input id="objName" type="text" placeholder="Ej. Taladro">
+                            </div>
+                            <div>
+                                <label for="objState">Estado</label>
+                                <select id="objState">
+                                    <option value="Nuevo">Nuevo</option>
+                                    <option value="Usado">Usado</option>
+                                    <option value="Desgastado">Desgastado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 18px;">
+                            <label for="objDesc">Descripción</label>
+                            <textarea id="objDesc" placeholder="Describe el objeto"></textarea>
+                        </div>
+
+                        <div style="margin-top: 18px;">
+                            <label for="objImage">URL de la Imagen</label>
+                            <input id="objImage" type="url" placeholder="https://i.imgur.com/abc123.jpg">
+                            <p class="muted" style="margin-top: 8px;">
+                                <strong>Cómo obtener la URL:</strong><br>
+                                <strong>Opción 1 - Placeholder (recomendado):</strong> 
+                                <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">https://via.placeholder.com/300x200?text=MiProducto</code><br>
+                                <strong>Opción 2 - Imgur (sin registrarse):</strong> Sube en imgur.com y copia el enlace directo<br>
+                                <strong>Opción 3 - Google Imágenes:</strong> Click derecho → "Copiar enlace de imagen" (no siempre funciona)
+                            </p>
+                        </div>
+
+                        <div class="actions">
+                            <button class="primary" id="btnSaveObject">Guardar</button>
+                            <button class="ghost" id="btnBackMenuFromPublish">Volver</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="screenCatalog" class="screen hidden">
+                    <div class="panel">
+                        <h2>Catálogo</h2>
+                        <p class="subtitle">Los objetos publicados aparecen aquí con su acción de solicitud.</p>
+
+                        <div class="catalog-wrap" style="margin-top: 18px;">
+                            <div id="catalogList" class="catalog-list"></div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="ghost" id="btnBackMenuFromCatalog">Volver</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="screenNotice" class="screen hidden">
+                    <div class="panel">
+                        <h2>Estado</h2>
+                        <div class="note" id="noticeText"></div>
+                        <div class="actions">
+                            <button class="primary" id="btnNoticeOk">Aceptar</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="api.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
