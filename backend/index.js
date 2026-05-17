@@ -1,15 +1,19 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { poolPromise } = require('./db'); // Importamos la conexión
 require('dotenv').config();
 const app = express();
 const authRoutes = require('./routes/auth');
 const articulosRoutes = require('./routes/articulos');
+const reservasRoutes = require('./routes/reservas');
 
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes); // Rutas de autenticación
 app.use('/api/articulos', articulosRoutes); // Rutas de artículos
+app.use('/api/reservas', reservasRoutes); // Rutas de reservas
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Ruta de prueba
 app.get('/', (req, res) => {
