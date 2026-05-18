@@ -1,0 +1,1 @@
+Este archivo solo es para que aparezca la carpeta uploads en el repositorio, ya que git no sube carpetas vacías. Aquí se pueden subir archivos que se quieran compartir con el frontend, como imágenes o documentos.
